@@ -1,22 +1,27 @@
 package main
 
 import (
+	"fmt"
 	"github.com/egormizerov/jsonrpc"
 )
+
+type Args struct {
+	X int
+	Y int
+}
 
 func main() {
 	s, _ := jsonrpc.NewServer()
 	// This handler for method plus
 	s.SetMethod("sum", func(c *jsonrpc.Context) {
-		params, err := c.Params()
+		var args Args
+		err := c.BindJSON(&args)
 		if err != nil {
-			c.Error(jsonrpc.InternalErrorError)
+			fmt.Println(err.Error())
+			c.Error(jsonrpc.InvalidParamsError)
 		}
-
-		x := params.GetInt("x")
-		y := params.GetInt("y")
-
-		c.Int(x + y)
+		c.Int(args.X + args.Y)
 	})
+
 	s.Run() // listen and serve on localhost:8000
 }

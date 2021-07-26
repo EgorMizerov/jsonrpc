@@ -56,6 +56,14 @@ func (c *Context) Params() (fastjson.Value, error) {
 	return *val2, nil
 }
 
+func (c *Context) Bind(obj interface{}, bindType bindType) error {
+	return bind(obj, bindType, c)
+}
+
+func (c *Context) BindJSON(obj interface{}) error {
+	return bind(obj, BindJSONType, c)
+}
+
 func (c *Context) String(str string) {
 	res := newStringResult(str)
 	c.response.result = res
