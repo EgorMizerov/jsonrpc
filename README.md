@@ -1,7 +1,7 @@
 # jsonrpc
 ___
 
-A json-rpc implementation on golang
+A json-rpc implementation on golang with support for batch requests
 
 ## Installation
 ___
