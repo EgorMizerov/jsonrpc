@@ -65,28 +65,3 @@ func main() {
 	s.Run() // listen and serve on localhost:8000
 }
 ```
-### Model binding and validation
-```go
-package main
-
-import "github.com/egormizerov/jsonrpc"
-
-type AuthForm struct {
-	Email string `validate:"email"`
-	Password string
-}
-
-func main() {
-	s, _ := jsonrpc.NewServer()
-	s.SetMethod("login", func(c *jsonrpc.Context) {
-		var form AuthForm
-		err := c.BindJSON(&form)
-		if err != nil {
-			c.Error(jsonrpc.InvalidParamsError)
-		}
-		
-		c.String("authorize")
-	})
-	s.Run() // listen and serve on localhost:8000
-}
-```
