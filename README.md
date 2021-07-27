@@ -101,3 +101,22 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 ```
+### Custom errors
+```go
+package main
+
+import "github.com/egormizerov/jsonrpc"
+import "net/http"
+
+func main() {
+	s := jsonrpc.NewHandler()
+	http.HandleFunc("/rpc", s.RPC)
+
+	s.SetMethod("error", func(c *jsonrpc.Context) {
+		err := jsonrpc.NewRpcError(993, "my custom error")
+		c.Error(err)
+	})
+	
+	http.ListenAndServe(":8000", nil)
+}
+```
