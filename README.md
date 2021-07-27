@@ -27,13 +27,17 @@ $ vim server.go
 package main
 
 import "github.com/egormizerov/jsonrpc"
+import "net/http"
 
 func main() {
-	s, _ := jsonrpc.NewServer()
+	s := jsonrpc.NewHandler()
+	http.HandleFunc("/rpc", s.RPC)
+	
 	s.SetMethod("ping", func(c *jsonrpc.Context) {
 		c.String("pong")
 	})
-	s.Run() // listen and serve on localhost:8000
+	
+	http.ListenAndServe(":8000", nil)
 }
 ```
 
@@ -48,9 +52,12 @@ ___
 package main
 
 import "github.com/egormizerov/jsonrpc"
+import "net/http"
 
 func main() {
-	s, _ := jsonrpc.NewServer()
+	s := jsonrpc.NewHandler()
+	http.HandleFunc("/rpc", s.RPC)
+
 	s.SetMethod("sum", func(c *jsonrpc.Context) {
 		params, err := c.Params()
 		if err != nil {
@@ -62,19 +69,25 @@ func main() {
 
 		c.Int(x + y)
 	})
-	s.Run() // listen and serve on localhost:8000
+	
+	http.ListenAndServe(":8000", nil)
 }
 ```
 ### Model binding and validation
 ```go
 package main
+
 import "github.com/egormizerov/jsonrpc"
+import "net/http"
+
 type AuthForm struct {
 	Email string `validate:"email"`
 	Password string
 }
 func main() {
-	s, _ := jsonrpc.NewServer()
+	s := jsonrpc.NewHandler()
+	http.HandleFunc("/rpc", s.RPC)
+	
 	s.SetMethod("login", func(c *jsonrpc.Context) {
 		var form AuthForm
 		err := c.BindJSON(&form)
@@ -84,6 +97,7 @@ func main() {
 		
 		c.String("authorize")
 	})
-	s.Run() // listen and serve on localhost:8000
+	
+	http.ListenAndServe(":8000", nil)
 }
 ```
