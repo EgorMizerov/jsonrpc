@@ -17,6 +17,7 @@ func newContext(req *http.Request, resp *Response) *Context {
 	return &Context{
 		values:   make(map[interface{}]interface{}),
 		response: resp,
+		Request:  req,
 	}
 }
 

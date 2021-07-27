@@ -11,9 +11,6 @@ const (
 	BindJSONType bindType = iota
 )
 
-var EnableDecoderUseNumber = false
-var EnableDecoderDisallowUnknownFields = false
-
 func bind(obj interface{}, bindType bindType, ctx *Context) error {
 	params, err := ctx.Params()
 	if err != nil {
