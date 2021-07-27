@@ -3,15 +3,17 @@ package jsonrpc
 import (
 	"errors"
 	"github.com/valyala/fastjson"
+	"net/http"
 	"time"
 )
 
 type Context struct {
 	values   map[interface{}]interface{}
 	response *Response
+	Request  *http.Request
 }
 
-func newContext(resp *Response) *Context {
+func newContext(req *http.Request, resp *Response) *Context {
 	return &Context{
 		values:   make(map[interface{}]interface{}),
 		response: resp,

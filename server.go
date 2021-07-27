@@ -151,7 +151,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, value := range values {
 			var response Response
 			responses = append(responses, &response)
-			go s.handler(value, &response, &wg)
+			go s.handler(r, w, value, &response, &wg)
 			count++
 		}
 		wg.Wait()
@@ -162,16 +162,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if v.Type() == fastjson.TypeObject {
 		var response Response
-		s.handler(v, &response, nil)
+		s.handler(r, w, v, &response, nil)
 		w.Write([]byte(response.String()))
 	}
 }
 
-func (s *Server) handler(v *fastjson.Value, out *Response, wg *sync.WaitGroup) {
+func (s *Server) handler(r *http.Request, w http.ResponseWriter, v *fastjson.Value, out *Response, wg *sync.WaitGroup) {
 	if wg != nil {
 		defer wg.Done()
 	}
-	ctx := newContext(out)
+	ctx := newContext(r, out)
 	rpcv := v.Get("jsonrpc")
 	if rpcv == nil || rpcv.String() != "\"2.0\"" {
 		err := InvalidReqError
