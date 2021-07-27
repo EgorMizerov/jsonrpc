@@ -25,6 +25,8 @@ type (
 		result *result
 		id     interface{}
 	}
+
+	H map[string]interface{}
 )
 
 var (

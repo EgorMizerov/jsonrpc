@@ -32,7 +32,7 @@ func (r *result) String() (out string) {
 	switch r.typeResult {
 	case StringResultType:
 		out = "\"" + r.value + "\""
-	case ArrayResultType & ObjectResultType & IntResultType & FloatResultType:
+	case ArrayResultType, ObjectResultType, IntResultType, FloatResultType:
 		out = r.value
 	case BoolResultType:
 		out = strings.Title(r.value)
