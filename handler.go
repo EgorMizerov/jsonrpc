@@ -8,13 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 // Server is a json-rpc server
 type (
-	Server struct {
-		server   *http.Server
+	Handler struct {
 		handlers map[string]func(ctx *Context)
 	}
 
@@ -40,34 +38,14 @@ var (
 	}
 )
 
-// NewServer is a constructor for type Server
-func NewServer(params ...ServerParam) (server *Server, err error) {
-	server = &Server{
-		server: &http.Server{
-			Addr:         "localhost:8000",
-			ReadTimeout:  time.Second * 10,
-			WriteTimeout: time.Second * 10,
-		},
+func NewHandler() *Handler {
+	return &Handler{
 		handlers: make(map[string]func(ctx *Context)),
 	}
-	server.server.Handler = server
-
-	for _, param := range params {
-		err = param.fn(server)
-		if err != nil {
-			return
-		}
-	}
-	return
-}
-
-// Run is a function for listen and serve http server
-func (s *Server) Run() error {
-	return s.server.ListenAndServe()
 }
 
 // SetMethod is a function for setting a handler for a method
-func (s *Server) SetMethod(name string, fn func(ctx *Context)) {
+func (s *Handler) SetMethod(name string, fn func(ctx *Context)) {
 	s.handlers[name] = fn
 }
 
@@ -120,7 +98,7 @@ func joinResponses(responses []*Response) (out string) {
 	return
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var p fastjson.Parser
 
@@ -167,7 +145,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handler(r *http.Request, w http.ResponseWriter, v *fastjson.Value, out *Response, wg *sync.WaitGroup) {
+func (s *Handler) handler(r *http.Request, w http.ResponseWriter, v *fastjson.Value, out *Response, wg *sync.WaitGroup) {
 	if wg != nil {
 		defer wg.Done()
 	}

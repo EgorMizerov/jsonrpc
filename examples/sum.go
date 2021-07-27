@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/egormizerov/jsonrpc"
+	"net/http"
 )
 
 type Args struct {
@@ -11,7 +12,8 @@ type Args struct {
 }
 
 func main() {
-	s, _ := jsonrpc.NewServer()
+	s := jsonrpc.NewHandler()
+	http.HandleFunc("/rpc", s.RPC)
 	// This handler for method plus
 	s.SetMethod("sum", func(c *jsonrpc.Context) {
 		var args Args
@@ -23,5 +25,5 @@ func main() {
 		c.Int(args.X + args.Y)
 	})
 
-	s.Run() // listen and serve on localhost:8000
+	http.ListenAndServe(":8000", nil)
 }
