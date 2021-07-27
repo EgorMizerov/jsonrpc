@@ -21,7 +21,7 @@ type (
 	}
 
 	Response struct {
-		error  *rpcError
+		error  RpcError
 		result *result
 		id     interface{}
 	}
@@ -52,7 +52,7 @@ func (s *Handler) SetMethod(name string, fn func(ctx *Context)) {
 func (r *Response) String() string {
 	str := "{\"jsonrpc\": \"2.0\", "
 	if r.error != nil {
-		str += "\"error\": {\"code\": " + strconv.Itoa(int(*r.error)) + ", \"message\": \"" + r.error.Message() + "\"}"
+		str += "\"error\": {\"code\": " + strconv.Itoa(r.error.GetCode()) + ", \"message\": \"" + r.error.GetMessage() + "\"}"
 
 		if r.id != nil {
 			id, ok := r.id.(string)

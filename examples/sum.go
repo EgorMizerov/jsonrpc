@@ -20,7 +20,7 @@ func main() {
 		err := c.BindJSON(&args)
 		if err != nil {
 			fmt.Println(err.Error())
-			c.Error(jsonrpc.InvalidParamsError)
+			c.Error(jsonrpc.InternalErrorError)
 		}
 		c.Int(args.X + args.Y)
 	})

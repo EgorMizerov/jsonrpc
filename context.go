@@ -54,6 +54,9 @@ func (c *Context) Params() (fastjson.Value, error) {
 	if !ok {
 		return fastjson.Value{}, errors.New("failed to typecast")
 	}
+	if val2 == nil {
+		return fastjson.Value{}, nil
+	}
 
 	return *val2, nil
 }
@@ -104,6 +107,6 @@ func (c *Context) Object(obj interface{}) error {
 	return nil
 }
 
-func (c *Context) Error(err rpcError) {
-	c.response.error = &err
+func (c *Context) Error(err RpcError) {
+	c.response.error = err
 }

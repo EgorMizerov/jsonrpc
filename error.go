@@ -1,5 +1,10 @@
 package jsonrpc
 
+type RpcError interface {
+	GetCode() int
+	GetMessage() string
+}
+
 type rpcError int
 
 const (
@@ -11,7 +16,7 @@ const (
 	ServerError         rpcError = -32000
 )
 
-func (e rpcError) Message() (m string) {
+func (e rpcError) GetMessage() (m string) {
 	switch e {
 	case -32700:
 		m = "Parse error"
@@ -28,4 +33,28 @@ func (e rpcError) Message() (m string) {
 	}
 
 	return
+}
+
+func (e rpcError) GetCode() int {
+	return int(e)
+}
+
+type customError struct {
+	code    int
+	message string
+}
+
+func NewRpcError(code int, message string) customError {
+	return customError{
+		code:    code,
+		message: message,
+	}
+}
+
+func (c customError) GetCode() int {
+	return c.code
+}
+
+func (c customError) GetMessage() string {
+	return c.message
 }
