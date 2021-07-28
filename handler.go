@@ -100,7 +100,7 @@ func joinResponses(responses []*Response) (out string) {
 	return
 }
 
-func (s *Handler) WebSocket(r *http.Request, w http.ResponseWriter, in string) (string, error) {
+func (s *Handler) Handle(r *http.Request, w http.ResponseWriter, in string) (string, error) {
 	var p fastjson.Parser
 	v, err := p.ParseBytes([]byte(in))
 	if err != nil {
@@ -138,10 +138,7 @@ func (s *Handler) WebSocket(r *http.Request, w http.ResponseWriter, in string) (
 	return "", err
 }
 
-func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var p fastjson.Parser
-
+func (s *Handler) Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
 	data, err := io.ReadAll(r.Body)
@@ -150,39 +147,16 @@ func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	v, err := p.ParseBytes(data)
+	resp, err := s.Handle(r, w, string(data))
 	if err != nil {
-		if strings.Contains(err.Error(), "cannot parse JSON") {
-			w.Write([]byte(parseErrorResponse.String()))
-			return
-		}
-		return
+		w.Write([]byte(serverErrorResponse.String()))
 	}
+	w.Write([]byte(resp))
+}
 
-	if v.Type() == fastjson.TypeArray {
-		var wg sync.WaitGroup
-		values, _ := v.Array()
-		var count int
-		var responses []*Response
-
-		wg.Add(len(values))
-		for _, value := range values {
-			var response Response
-			responses = append(responses, &response)
-			go s.handler(r, w, value, &response, &wg)
-			count++
-		}
-		wg.Wait()
-
-		out := joinResponses(responses)
-		w.Write([]byte(out))
-	}
-
-	if v.Type() == fastjson.TypeObject {
-		var response Response
-		s.handler(r, w, v, &response, nil)
-		w.Write([]byte(response.String()))
-	}
+// RPC is alias to Handler
+func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
+	s.Handler(w, r)
 }
 
 func (s *Handler) handler(r *http.Request, w http.ResponseWriter, v *fastjson.Value, out *Response, wg *sync.WaitGroup) {
