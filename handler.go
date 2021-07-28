@@ -100,25 +100,14 @@ func joinResponses(responses []*Response) (out string) {
 	return
 }
 
-func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+func (s *Handler) Handle(r *http.Request, w http.ResponseWriter, in string) (string, error) {
 	var p fastjson.Parser
-
-	w.Header().Add("Content-Type", "application/json")
-
-	data, err := io.ReadAll(r.Body)
-	if err != nil {
-		w.Write([]byte(serverErrorResponse.String()))
-		return
-	}
-
-	v, err := p.ParseBytes(data)
+	v, err := p.ParseBytes([]byte(in))
 	if err != nil {
 		if strings.Contains(err.Error(), "cannot parse JSON") {
-			w.Write([]byte(parseErrorResponse.String()))
-			return
+			return parseErrorResponse.String(), nil
 		}
-		return
+		return "", err
 	}
 
 	if v.Type() == fastjson.TypeArray {
@@ -137,14 +126,37 @@ func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
 		wg.Wait()
 
 		out := joinResponses(responses)
-		w.Write([]byte(out))
+		return out, nil
 	}
 
 	if v.Type() == fastjson.TypeObject {
 		var response Response
 		s.handler(r, w, v, &response, nil)
-		w.Write([]byte(response.String()))
+		return response.String(), nil
 	}
+
+	return "", err
+}
+
+func (s *Handler) Handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.Write([]byte(serverErrorResponse.String()))
+		return
+	}
+
+	resp, err := s.Handle(r, w, string(data))
+	if err != nil {
+		w.Write([]byte(serverErrorResponse.String()))
+	}
+	w.Write([]byte(resp))
+}
+
+// RPC is alias to Handler
+func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
+	s.Handler(w, r)
 }
 
 func (s *Handler) handler(r *http.Request, w http.ResponseWriter, v *fastjson.Value, out *Response, wg *sync.WaitGroup) {
