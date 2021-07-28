@@ -120,3 +120,36 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 ```
+### Websocket
+```go
+package main
+
+import (
+	"github.com/egormizerov/jsonrpc"
+	"github.com/gorilla/websocket"
+	"net/http"
+)
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+func main() {
+	s := jsonrpc.NewHandler()
+	s.SetMethod("sum", func(c *jsonrpc.Context) {
+		params, _ := c.Params()
+		c.Int(params.GetInt("x") + params.GetInt("y"))
+	})
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		conn, _ := upgrader.Upgrade(w, r, nil)
+		for {
+			t, p, _ := conn.ReadMessage()
+			res, _ := s.Handle(r, w, string(p))
+			conn.WriteMessage(t, []byte(res))
+		}
+	})
+	http.ListenAndServe(":8000", nil)
+}
+```
