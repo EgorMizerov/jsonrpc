@@ -100,6 +100,44 @@ func joinResponses(responses []*Response) (out string) {
 	return
 }
 
+func (s *Handler) WebSocket(r *http.Request, w http.ResponseWriter, in string) (string, error) {
+	var p fastjson.Parser
+	v, err := p.ParseBytes([]byte(in))
+	if err != nil {
+		if strings.Contains(err.Error(), "cannot parse JSON") {
+			return parseErrorResponse.String(), nil
+		}
+		return "", err
+	}
+
+	if v.Type() == fastjson.TypeArray {
+		var wg sync.WaitGroup
+		values, _ := v.Array()
+		var count int
+		var responses []*Response
+
+		wg.Add(len(values))
+		for _, value := range values {
+			var response Response
+			responses = append(responses, &response)
+			go s.handler(r, w, value, &response, &wg)
+			count++
+		}
+		wg.Wait()
+
+		out := joinResponses(responses)
+		return out, nil
+	}
+
+	if v.Type() == fastjson.TypeObject {
+		var response Response
+		s.handler(r, w, v, &response, nil)
+		return response.String(), nil
+	}
+
+	return "", err
+}
+
 func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var p fastjson.Parser
