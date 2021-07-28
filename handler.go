@@ -100,7 +100,7 @@ func joinResponses(responses []*Response) (out string) {
 	return
 }
 
-func (s *Handler) Handle(r *http.Request, w http.ResponseWriter, in string) (string, error) {
+func (s *Handler) Handle(in string, r *http.Request, w http.ResponseWriter) (string, error) {
 	var p fastjson.Parser
 	v, err := p.ParseBytes([]byte(in))
 	if err != nil {
@@ -147,7 +147,7 @@ func (s *Handler) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.Handle(r, w, string(data))
+	resp, err := s.Handle(string(data), r, w)
 	if err != nil {
 		w.Write([]byte(serverErrorResponse.String()))
 	}

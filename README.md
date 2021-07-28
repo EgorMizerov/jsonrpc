@@ -146,7 +146,7 @@ func main() {
 		conn, _ := upgrader.Upgrade(w, r, nil)
 		for {
 			t, p, _ := conn.ReadMessage()
-			res, _ := s.Handle(r, w, string(p))
+			res, _ := s.Handle(tring(p), r, w)
 			conn.WriteMessage(t, []byte(res))
 		}
 	})
