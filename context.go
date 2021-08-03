@@ -9,11 +9,11 @@ import (
 
 type Context struct {
 	values   map[interface{}]interface{}
-	response *Response
+	response *response
 	Request  *http.Request
 }
 
-func newContext(req *http.Request, resp *Response) *Context {
+func newContext(req *http.Request, resp *response) *Context {
 	return &Context{
 		values:   make(map[interface{}]interface{}),
 		response: resp,

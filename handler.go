@@ -20,7 +20,7 @@ type (
 		fn func(ctx *Context)
 	}
 
-	Response struct {
+	response struct {
 		error  RpcError
 		result *result
 		id     interface{}
@@ -31,15 +31,16 @@ type (
 
 var (
 	e1                 = ParseError
-	parseErrorResponse = Response{
+	parseErrorResponse = response{
 		error: &e1,
 	}
 	e2                  = ServerError
-	serverErrorResponse = Response{
+	serverErrorResponse = response{
 		error: &e2,
 	}
 )
 
+// NewHandler is a constructor for struct Handler
 func NewHandler() *Handler {
 	return &Handler{
 		handlers: make(map[string][]func(ctx *Context)),
@@ -51,7 +52,7 @@ func (s *Handler) SetMethod(name string, fn ...func(ctx *Context)) {
 	s.handlers[name] = fn
 }
 
-func (r *Response) String() string {
+func (r *response) String() string {
 	str := "{\"jsonrpc\": \"2.0\", "
 	if r.error != nil {
 		str += "\"error\": {\"code\": " + strconv.Itoa(r.error.GetCode()) + ", \"message\": \"" + r.error.GetMessage() + "\"}"
@@ -87,7 +88,7 @@ func (r *Response) String() string {
 	return str
 }
 
-func joinResponses(responses []*Response) (out string) {
+func joinResponses(responses []*response) (out string) {
 	out = "["
 	for i, response := range responses {
 		if i == 0 {
@@ -114,11 +115,11 @@ func (s *Handler) Handle(in string, r *http.Request, w http.ResponseWriter) (str
 		var wg sync.WaitGroup
 		values, _ := v.Array()
 		var count int
-		var responses []*Response
+		var responses []*response
 
 		wg.Add(len(values))
 		for _, value := range values {
-			var response Response
+			var response response
 			responses = append(responses, &response)
 			go s.handler(r, w, value, &response, &wg)
 			count++
@@ -130,7 +131,7 @@ func (s *Handler) Handle(in string, r *http.Request, w http.ResponseWriter) (str
 	}
 
 	if v.Type() == fastjson.TypeObject {
-		var response Response
+		var response response
 		s.handler(r, w, v, &response, nil)
 		return response.String(), nil
 	}
@@ -159,7 +160,7 @@ func (s *Handler) RPC(w http.ResponseWriter, r *http.Request) {
 	s.Handler(w, r)
 }
 
-func (s *Handler) handler(r *http.Request, w http.ResponseWriter, v *fastjson.Value, out *Response, wg *sync.WaitGroup) {
+func (s *Handler) handler(r *http.Request, w http.ResponseWriter, v *fastjson.Value, out *response, wg *sync.WaitGroup) {
 	if wg != nil {
 		defer wg.Done()
 	}
