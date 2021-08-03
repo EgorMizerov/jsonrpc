@@ -13,7 +13,7 @@ import (
 // Server is a json-rpc server
 type (
 	Handler struct {
-		handlers map[string]func(ctx *Context)
+		handlers map[string][]func(ctx *Context)
 	}
 
 	Method struct {
@@ -42,12 +42,12 @@ var (
 
 func NewHandler() *Handler {
 	return &Handler{
-		handlers: make(map[string]func(ctx *Context)),
+		handlers: make(map[string][]func(ctx *Context)),
 	}
 }
 
 // SetMethod is a function for setting a handler for a method
-func (s *Handler) SetMethod(name string, fn func(ctx *Context)) {
+func (s *Handler) SetMethod(name string, fn ...func(ctx *Context)) {
 	s.handlers[name] = fn
 }
 
@@ -195,12 +195,14 @@ func (s *Handler) handler(r *http.Request, w http.ResponseWriter, v *fastjson.Va
 		}
 	}
 
-	fn, ok := s.handlers[strings.Split(method.String(), "\"")[1]]
+	fns, ok := s.handlers[strings.Split(method.String(), "\"")[1]]
 	if !ok {
 		err := MethodNotFoundError
 		out.error = &err
 		return
 	}
 	ctx.Set("params", v.Get("params"))
-	fn(ctx)
+	for _, fn := range fns {
+		fn(ctx)
+	}
 }
