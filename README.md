@@ -153,3 +153,30 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 ```
+
+### Middleware
+```go
+package main
+
+import (
+	"github.com/egormizerov/jsonrpc"
+	"net/http"
+	"fmt"
+)
+
+func main() {
+	s := jsonrpc.NewHandler()
+	http.HandleFunc("/rpc", s.RPC)
+	
+	s.SetMethod("ping", middleware, func(c *jsonrpc.Context) {
+		fmt.Println("in handler")
+		c.String("pong")
+	})
+	
+	http.ListenAndServe(":8000", nil)
+}
+
+func middleware(c *jsonrpc.Context) {
+	fmt.Println("in middleware")
+}
+```
